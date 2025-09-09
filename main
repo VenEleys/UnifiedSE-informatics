@@ -1,0 +1,37 @@
+class Utils:
+    numsLetters = "0123456789abcdefghijklmnopqrstuvwxyz"
+    nums = "0123456789"
+    class HardNum:
+        def init(self, *args: str) -> None:
+            self.num = []
+            for i in args:
+                if not i.startswith("_"):
+                    self.num += list(i)
+                    continue
+                self.num.append(i[1::])
+      
+    def tenToSystem(numTen: int, system: int, returnStr = True) -> str | int:
+        ans: str = ""
+        while numTen > 0:
+            ans += Utils.numsLetters[numTen%system]
+            numTen //= system
+        if returnStr:
+            return ans[::-1]
+        return int(ans[::-1])
+    
+    def systemToTen(numSystem: str, system: int, returnStr: bool = True) -> str | int:
+        numSystem = str(numSystem)
+        if returnStr:
+            return str(int(numSystem, system))
+        return int(numSystem, system) 
+    
+    def hardSystemToTen(system: int, *numPieces: str, returnStr: bool = False) -> str | int:
+        num = Utils.HardNum(*numPieces)
+        ans = 0
+        l = len(num.num)
+        for index, i in enumerate(num.num):
+            ans += int(i)*system**(l-1-index)
+    
+        if returnStr:
+            return int(ans)
+        return ans
