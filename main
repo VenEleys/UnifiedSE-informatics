@@ -84,7 +84,7 @@ class Utils:
             return ans
         for i in Utils.letters:
             if i in ans:
-                raise ValueError("Нельзя перевести число, имеющее буквенные значения, в int")
+                raise ValueError(f"can`t convert number with base {system} containing literals to int")
         return int(ans)
     
     def systemToTen(num: str, system: int, returnStr: bool = False) -> str:
@@ -92,7 +92,9 @@ class Utils:
             num = Utils.HardNum(num)
         ans = 0
         l = len(num)
-        for index, i in enumerate(num()):
+        for index, i in enumerate(num):
+            if i >= system:
+                raise ValueError(f"invalid number with base {system}: containing a number ({i}) larger or equal base")
             ans += i*system**(l-1-index)
     
         if returnStr:
