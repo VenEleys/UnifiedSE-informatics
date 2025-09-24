@@ -3,7 +3,7 @@ paste this code to your project
 
 use Utils methods to convert numbers with any base >= 2
 
-# System to ten
+# SystemToTen
 if you have number with base > 36 or non-letter number, use f"_var_" instead
 ```python
 var = 10
