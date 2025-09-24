@@ -3,19 +3,83 @@ class Utils:
     letters = "abcdefghijklmnopqrstuvwxyz"
     numsLetters = nums+letters
     class HardNum:
-        def __init__(self, *args: str) -> None:
+        def __init__(self, arg: str) -> None:
             self.num = []
-            for i in args:
-                if not i.startswith("_"):
-                    self.num += list(i)
+            self.ishard = False
+            
+            i = 0
+            while i < len(arg):
+                if arg[i] in Utils.numsLetters:
+                    self.num.append(Utils.numsLetters.index(arg[i]))
+                    i += 1
                     continue
-                self.num.append(i[1::])
+                if arg[i] == "_":
+                    i += 1
+                    special_num = ""
+                    while arg[i] != "_":
+                        special_num += arg[i]
+                        i += 1
+                    special_num = int(special_num)
+                    if special_num > 36:
+                        self.ishard = True
+                    self.num.append(special_num)
+                    i += 1
+                    continue
+                print("ERROR")
 
-    def tenToSystem(numTen: int, system: int, returnStr = True) -> str | int:
+        def __call__(self, *args, **kwds):
+            return self.num
+        
+        def __len__(self):
+            return len(self.num)
+        
+        def __makeEasyNum(self):
+            if self.ishard:
+                raise IndexError("Can`t make easy num due this num is hard")
+            num = ""
+            for i in self.num:
+                num += Utils.numsLetters[i]
+            return num
+        
+        def __str__(self):
+            if not(self.ishard):
+                return self.__makeEasyNum()
+            num = ""
+            for i in self.num:
+                if i > 36:
+                    i = f"({i})"
+                else:
+                    i = Utils.numsLetters[i]
+                num += str(i)
+            return num
+        def __iter__(self):
+            return iter(self.num)
+        
+        def __getitem__(self, key):
+            return self.num[key]
+        
+        def __int__(self):
+            return int(self.__makeEasyNum())
+
+    def tenToSystem(num: int, system: int, returnStr = True) -> str:
+        if isinstance(num,str):
+            num = int(num)
         ans: str = ""
-        while numTen > 0:
-            ans = Utils.numsLetters[numTen%system] + ans
-            numTen //= system
+
+        if system > 36:
+            while num > 0:
+                a = num%system
+                num //= system
+                if a > 36:
+                    a = f'_{a}_'
+                else:
+                    a = Utils.numsLetters[a]
+                ans = a + ans
+            return Utils.HardNum(ans)
+
+        while num > 0:
+            ans = Utils.numsLetters[num%system] + ans
+            num //= system
         if returnStr:
             return ans
         for i in Utils.letters:
@@ -23,18 +87,13 @@ class Utils:
                 raise ValueError("Нельзя перевести число, имеющее буквенные значения, в int")
         return int(ans)
     
-    def systemToTen(numSystem: str, system: int, returnStr: bool = True) -> str | int:
-        numSystem = str(numSystem)
-        if returnStr:
-            return str(int(numSystem, system))
-        return int(numSystem, system) 
-    
-    def hardSystemToTen(system: int, *numPieces: str, returnStr: bool = False) -> str | int:
-        num = Utils.HardNum(*numPieces)
+    def systemToTen(num: str, system: int, returnStr: bool = False) -> str:
+        if not(isinstance(num, Utils.HardNum)):
+            num = Utils.HardNum(num)
         ans = 0
-        l = len(num.num)
-        for index, i in enumerate(num.num):
-            ans += int(i,system)*system**(l-1-index)
+        l = len(num)
+        for index, i in enumerate(num()):
+            ans += i*system**(l-1-index)
     
         if returnStr:
             return int(ans)
