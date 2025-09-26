@@ -6,7 +6,9 @@ class Utils:
         def __init__(self, arg: str) -> None:
             self.num = []
             self.ishard = False
-            
+            if isinstance(arg, int):
+                self.num = [int(i) for i in str(arg)]
+                return
             i = 0
             while i < len(arg):
                 if arg[i] in Utils.numsLetters:
