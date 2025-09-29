@@ -3,31 +3,49 @@ class Utils:
     letters = "abcdefghijklmnopqrstuvwxyz"
     numsLetters = nums+letters
     class HardNum:
-        def __init__(self, arg: str) -> None:
+        def __init__(self, arg) -> None:
             self.num = []
             self.ishard = False
+
             if isinstance(arg, int):
                 self.num = [int(i) for i in str(arg)]
                 return
-            i = 0
-            while i < len(arg):
-                if arg[i] in Utils.numsLetters:
-                    self.num.append(Utils.numsLetters.index(arg[i]))
-                    i += 1
-                    continue
-                if arg[i] == "_":
-                    i += 1
-                    special_num = ""
-                    while arg[i] != "_":
-                        special_num += arg[i]
+            
+            if isinstance(arg, str):
+                i = 0
+                while i < len(arg):
+                    if arg[i] in Utils.numsLetters:
+                        self.num.append(Utils.numsLetters.index(arg[i]))
                         i += 1
-                    special_num = int(special_num)
-                    if special_num > 36:
-                        self.ishard = True
-                    self.num.append(special_num)
-                    i += 1
-                    continue
-                print("ERROR")
+                        continue
+                    if arg[i] == "_":
+                        i += 1
+                        special_num = ""
+                        while arg[i] != "_":
+                            special_num += arg[i]
+                            i += 1
+                        special_num = int(special_num)
+                        if special_num > 36:
+                            self.ishard = True
+                        self.num.append(special_num)
+                        i += 1
+                        continue
+                return
+            
+            if isinstance(arg, list) or isinstance(arg, tuple):
+                for i in arg:
+                    if isinstance(i, int):
+                        self.num.append(i)
+                        if i > 36:
+                            self.ishard = True
+                        continue
+                    if isinstance(i, str):
+                        for j in i:
+                            self.num.append(Utils.numsLetters.index(j))
+                        continue
+                return
+
+            raise ValueError(f"Unavailable num type: {type(arg)}")
 
         def __call__(self, *args, **kwds):
             return self.num
