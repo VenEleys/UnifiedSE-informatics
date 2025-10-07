@@ -1,15 +1,27 @@
-from typing import Union, Iterable
 from __future__ import annotations
+from typing import Union, Iterable
+from enum import Enum
 
 class Utils:
     nums: str = "0123456789"
     letters: str = "abcdefghijklmnopqrstuvwxyz"
     numsLetters: str = nums+letters
+    class OPERATORS(Enum):
+        ADDITION = "+"
+        SUBSTRACTION = "-"
+        MULTIPLY = "*"
+        DIVISION = "/"
+        FLOORDIVISION = "//"
+        MOD = "%"
+        POWER = "**"
+
     class HardNum:
-        def __init__(self, arg: Union[str, int, list[Union[str,int]], Utils.HardNum], currentSystem:int = 10) -> None:
+        def __init__(self, arg: Union[str, int, list[Union[str,int]], Utils.HardNum, float], currentSystem:int = 10) -> None:
             self.num: list[int] = []
             self.ishard: bool = False
             self.currentSystem: int = currentSystem
+            self.isNegative: bool = False
+            self.fract: str = ""
 
             if isinstance(arg, Utils.HardNum):
                 self.num = arg.num
@@ -53,6 +65,13 @@ class Utils:
                             self.num.append(Utils.numsLetters.index(j))
                         continue
                 return
+            
+            if isinstance(arg, float):
+                int_: int = int(arg)
+                float_: float = arg - int_
+                self.fract = str(float_)
+                self.num = Utils.HardNum(int_).num
+                return
 
             raise ValueError(f"Unavailable num type: {type(arg)}")
 
@@ -77,13 +96,49 @@ class Utils:
         def __getitem__(self, key: int) -> int:
             return self.num[key]
         
-        def __getRealMinSystem(self) -> int:
-            return max(self.num)+1
-        
         def __int__(self) -> int:
             if self.currentSystem == 10 and self.__getRealMinSystem() <= 10:
                 return int(self.__str__())
             raise ValueError("Unable convert number to int: use getTen or systemToTen instead")
+        #TODO: __float__
+        
+        def __add__(self, num) -> Utils.HardNum:
+            return self.__doMathOperation(num, Utils.OPERATORS.ADDITION)
+        
+        def __sub__(self, num) -> Utils.HardNum:
+            return self.__doMathOperation(num, Utils.OPERATORS.SUBSTRACTION)
+        
+        def __mul__(self, num) -> Utils.HardNum:
+            return self.__doMathOperation(num, Utils.OPERATORS.MULTIPLY)
+        
+        def __truediv__(self, num) -> Utils.HardNum:
+            return self.__doMathOperation(num, Utils.OPERATORS.DIVISION)
+        
+        def __floordiv__(self, num) -> Utils.HardNum:
+            return self.__doMathOperation(num, Utils.OPERATORS.FLOORDIVISION)
+        
+        def __mod__(self, num) -> Utils.HardNum:
+            return self.__doMathOperation(num, Utils.OPERATORS.MOD)
+        
+        def __pow__(self, num) -> Utils.HardNum:
+            return self.__doMathOperation(num, Utils.OPERATORS.POWER)
+        
+        def __neg__(self) -> Utils.HardNum:
+            self.isNegative = not self.isNegative
+            return self
+        
+        def __abs__(self) -> Utils.HardNum:
+            self.isNegative = False
+            return self
+        
+        def __getRealMinSystem(self) -> int:
+            return max(self.num)+1
+        
+        def __doMathOperation(self, num: Union[int, str, Utils.HardNum], operation: Utils.OPERATORS) -> Utils.HardNum:
+            ans: int = eval(f"int(self) {operation.value} int(num)")
+            if self.currentSystem == 10 and self.__getRealMinSystem() <= 10:
+                return Utils.HardNum(ans)
+            return Utils.tenToSystem(ans, self.currentSystem)
             
         def getCurrentSystem(self, *args, **kargs) -> int:
             return self.currentSystem
