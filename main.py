@@ -168,10 +168,12 @@ class Utils:
                 raise ValueError("Unable convert number to base10: real number base is unknown")
             return Utils.systemToTen(self, currentSystem)
         
-        def getSystemFromCurrentSystem(self, endSystem: int):
+        def getSystemFromCurrentSystem(self, endSystem: int) -> Utils.HardNum:
             """
-            Returns number with {endSystem} base from current base 
-            \n (Use getCurrentSystem to check current base)
+            :return: - Number with {endSystem} base from current base (Use getCurrentSystem to check current base)
+            :rtype: Utils.HardNum
+            :param endSystem: - final base of number
+            :type endSystem: int
             """
             if self.currentSystem == 10 and self.__getRealMinSystem() <= 10:
                 return Utils.tenToSystem(self, endSystem)
@@ -179,9 +181,14 @@ class Utils:
                 raise ValueError(f"Unable convert number to base{endSystem}: real number base is unknown")
             return Utils.systemToSystem(self, self.currentSystem, endSystem)
         
-        def getSystemFromSystem(self, startSystem: int, endSystem: int, updateCurrentSystem: bool = False):
+        def getSystemFromSystem(self, startSystem: int, endSystem: int, updateCurrentSystem: bool = False) -> Utils.HardNum:
             """
-            Returns number with {endSystem} base from {startSystem} base
+            :return: - Number with {endSystem} base from {startSystem} base
+            :rtype: Utils.HardNum
+            :param startSystem: - current base of number
+            :param endSystem: - final base of number
+            :type startSystem: int
+            :type endSystem: int
             """
             if updateCurrentSystem:
                 self.currentSystem = startSystem
