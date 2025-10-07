@@ -1,13 +1,15 @@
+from typing import Union, Iterable
+from __future__ import annotations
 
 class Utils:
-    nums = "0123456789"
-    letters = "abcdefghijklmnopqrstuvwxyz"
-    numsLetters = nums+letters
+    nums: str = "0123456789"
+    letters: str = "abcdefghijklmnopqrstuvwxyz"
+    numsLetters: str = nums+letters
     class HardNum:
-        def __init__(self, arg, currentSystem:int = 10) -> None:
-            self.num = []
-            self.ishard = False
-            self.currentSystem = currentSystem
+        def __init__(self, arg: Union[str, int, list[Union[str,int]], Utils.HardNum], currentSystem:int = 10) -> None:
+            self.num: list[int] = []
+            self.ishard: bool = False
+            self.currentSystem: int = currentSystem
 
             if isinstance(arg, Utils.HardNum):
                 self.num = arg.num
@@ -18,7 +20,7 @@ class Utils:
                 return
             
             if isinstance(arg, str):
-                i = 0
+                i:int = 0
                 while i < len(arg):
                     if arg[i] in Utils.numsLetters:
                         self.num.append(Utils.numsLetters.index(arg[i]))
@@ -26,20 +28,21 @@ class Utils:
                         continue
                     if arg[i] == "_":
                         i += 1
-                        special_num = ""
+                        str_num: str = ""
                         while arg[i] != "_":
-                            special_num += arg[i]
+                            str_num+= arg[i]
                             i += 1
-                        special_num = int(special_num)
-                        if special_num > 36:
+                        num: int = int(str_num)
+                        if num > 36:
                             self.ishard = True
-                        self.num.append(special_num)
+                        self.num.append(num)
                         i += 1
                         continue
                 return
             
             if isinstance(arg, list) or isinstance(arg, tuple):
-                for i in arg:
+                num_list: Union[list, tuple] = arg
+                for i in num_list:
                     if isinstance(i, int):
                         self.num.append(i)
                         if i > 36:
@@ -68,10 +71,10 @@ class Utils:
                     i = Utils.numsLetters[i]
                 num += str(i)
             return num
-        def __iter__(self) -> iter:
+        def __iter__(self) -> Iterable[int]:
             return iter(self.num)
         
-        def __getitem__(self, key) -> int:
+        def __getitem__(self, key: int) -> int:
             return self.num[key]
         
         def __getRealMinSystem(self) -> int:
@@ -82,10 +85,10 @@ class Utils:
                 return int(self.__str__())
             raise ValueError("Unable convert number to int: use getTen or systemToTen instead")
             
-        def getCurrentSystem(self, *args) -> int:
+        def getCurrentSystem(self, *args, **kargs) -> int:
             return self.currentSystem
         
-        def getTen(self, currentSystem: int = None):
+        def getTen(self, currentSystem: Union[int, None] = None) -> Utils.HardNum:
             if not currentSystem:
                 currentSystem = self.currentSystem
             if currentSystem == 10 and self.__getRealMinSystem() <= 10:
@@ -106,40 +109,44 @@ class Utils:
                 self.currentSystem = startSystem
             return Utils.systemToSystem(self, startSystem, endSystem)
 
-    def tenToSystem(num, system: int) -> HardNum:
+    @staticmethod
+    def tenToSystem(num: Union[str, int, list[Union[str,int]], Utils.HardNum], system: int) -> HardNum:
         num = int(Utils.HardNum(num))
         
         if system > 36:
-            ans: list = []
+            ans_list: list = []
             while num > 0:
                 a = num%system
                 num //= system
 
-                ans = [a] + ans
-            return Utils.HardNum(ans, system)
+                ans_list = [a] + ans_list
+            return Utils.HardNum(ans_list, system)
 
-        ans: str = ""
+        ans_str: str = ""
         while num > 0:
-            ans = Utils.numsLetters[num%system] + ans
+            ans_str = Utils.numsLetters[num%system] + ans_str
             num //= system
-        return Utils.HardNum(ans, system)
+        return Utils.HardNum(ans_str, system)
     
-    def systemToTen(num, system: int) -> HardNum:
+    @staticmethod
+    def systemToTen(num: Union[str, int, list[Union[str,int]], Utils.HardNum], system: int) -> HardNum:
         num = Utils.HardNum(num, system)
-        ans = 0
-        l = len(num)
-        for index, i in enumerate(num):
+        ans: int = 0
+        l: int = len(num)
+        for index, i in enumerate(num()):
             if i >= system:
                 raise ValueError(f"invalid number with base {system}: containing a number ({i}) equal or larger base")
             ans += i*system**(l-1-index)
     
         return Utils.HardNum(ans)
     
-    def systemToSystem(num, startSystem: int, endSystem: int):
+    @staticmethod
+    def systemToSystem(num: Union[str, int, list[Union[str,int]], HardNum], startSystem: int, endSystem: int):
         num = Utils.systemToTen(num, startSystem)
         num = Utils.tenToSystem(num, endSystem)
         return num
     
-    def bitwise(num1, num2):
+    @staticmethod
+    def bitwise(num1: Union[str, int, list[Union[str,int]], HardNum], num2: Union[str, int, list[Union[str,int]], HardNum]) -> HardNum:
         num1, num2 = int(Utils.HardNum(num1)), int(Utils.HardNum(num2))
         return Utils.HardNum(num1 & num2)
