@@ -7,6 +7,9 @@ class Utils:
     letters: str = "abcdefghijklmnopqrstuvwxyz"
     numsLetters: str = nums+letters
     class OPERATORS(Enum):
+        """
+        Includes standart math operators in String
+        """
         ADDITION = "+"
         SUBSTRACTION = "-"
         MULTIPLY = "*"
@@ -16,6 +19,12 @@ class Utils:
         POWER = "**"
 
     class HardNum:
+        """
+        Special data Type
+        \nIncludes List, Str, Int at once
+        Can easily be converted to number with other base
+
+        """
         def __init__(self, arg: Union[str, int, list[Union[str,int]], Utils.HardNum, float], currentSystem:int = 10) -> None:
             self.num: list[int] = []
             self.ishard: bool = False
@@ -141,9 +150,16 @@ class Utils:
             return Utils.tenToSystem(ans, self.currentSystem)
             
         def getCurrentSystem(self, *args, **kargs) -> int:
+            """
+            Returns number`s base
+            \n(might be incorrect if base wasn`t set on HardNum implementation)
+            """
             return self.currentSystem
         
         def getTen(self, currentSystem: Union[int, None] = None) -> Utils.HardNum:
+            """
+            Returns number with base10
+            """
             if not currentSystem:
                 currentSystem = self.currentSystem
             if currentSystem == 10 and self.__getRealMinSystem() <= 10:
@@ -153,6 +169,10 @@ class Utils:
             return Utils.systemToTen(self, currentSystem)
         
         def getSystemFromCurrentSystem(self, endSystem: int):
+            """
+            Returns number with {endSystem} base from current base 
+            \n (Use getCurrentSystem to check current base)
+            """
             if self.currentSystem == 10 and self.__getRealMinSystem() <= 10:
                 return Utils.tenToSystem(self, endSystem)
             if self.currentSystem == 10 and self.__getRealMinSystem() > 10:
@@ -160,12 +180,18 @@ class Utils:
             return Utils.systemToSystem(self, self.currentSystem, endSystem)
         
         def getSystemFromSystem(self, startSystem: int, endSystem: int, updateCurrentSystem: bool = False):
+            """
+            Returns number with {endSystem} base from {startSystem} base
+            """
             if updateCurrentSystem:
                 self.currentSystem = startSystem
             return Utils.systemToSystem(self, startSystem, endSystem)
 
     @staticmethod
     def tenToSystem(num: Union[str, int, list[Union[str,int]], Utils.HardNum], system: int) -> HardNum:
+        """
+        Converts number with base10 to number with any base
+        """
         num = int(Utils.HardNum(num))
         
         if system > 36:
@@ -185,6 +211,9 @@ class Utils:
     
     @staticmethod
     def systemToTen(num: Union[str, int, list[Union[str,int]], Utils.HardNum], system: int) -> HardNum:
+        """
+        Converts number with any base to number with base10
+        """
         num = Utils.HardNum(num, system)
         ans: int = 0
         l: int = len(num)
@@ -197,11 +226,17 @@ class Utils:
     
     @staticmethod
     def systemToSystem(num: Union[str, int, list[Union[str,int]], HardNum], startSystem: int, endSystem: int):
+        """
+        Converts base of number from any to any
+        """
         num = Utils.systemToTen(num, startSystem)
         num = Utils.tenToSystem(num, endSystem)
         return num
     
     @staticmethod
     def bitwise(num1: Union[str, int, list[Union[str,int]], HardNum], num2: Union[str, int, list[Union[str,int]], HardNum]) -> HardNum:
+        """
+        Returns bitwise of two numbers in base10
+        """
         num1, num2 = int(Utils.HardNum(num1)), int(Utils.HardNum(num2))
         return Utils.HardNum(num1 & num2)
