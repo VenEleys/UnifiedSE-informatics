@@ -17,6 +17,12 @@ class Utils:
         FLOORDIVISION = "//"
         MOD = "%"
         POWER = "**"
+        EQUAL = "=="
+        INEQUAL = "!="
+        LESS = "<"
+        LESS_EQUAL = "<="
+        GREATER = ">"
+        GREATER_EQUAL = ">="
 
     class HardNum:
         """
@@ -37,10 +43,18 @@ class Utils:
                 return
 
             if isinstance(arg, int):
+                if abs(arg) == -arg:
+                    arg = abs(arg)
+                    self.isNegative = True
+                
                 self.num = [int(i) for i in str(arg)]
                 return
             
             if isinstance(arg, str):
+                if arg[0] == "-":
+                    self.isNegative = True
+                    arg = arg[1:]
+
                 i:int = 0
                 while i < len(arg):
                     if arg[i] in Utils.numsLetters:
@@ -59,6 +73,7 @@ class Utils:
                         self.num.append(num)
                         i += 1
                         continue
+                    raise ValueError(f"Unavailable sign for number: {arg[i]}")
                 return
             
             if isinstance(arg, list) or isinstance(arg, tuple):
@@ -79,7 +94,9 @@ class Utils:
                 int_: int = int(arg)
                 float_: float = arg - int_
                 self.fract = str(float_)
-                self.num = Utils.HardNum(int_).num
+                new_ = Utils.HardNum(int_)
+                self.num = new_.num
+                self.isNegative = new_.isNegative
                 return
 
             raise ValueError(f"Unavailable num type: {type(arg)}")
@@ -92,6 +109,8 @@ class Utils:
         
         def __str__(self):
             num = ""
+            if self.isNegative:
+                num += "-"
             for i in self.num:
                 if i > 36:
                     i = f"({i})"
@@ -140,6 +159,26 @@ class Utils:
             self.isNegative = False
             return self
         
+
+        def __eq__(self, num) -> bool:
+            return self.__doComparisonOperation(num, Utils.OPERATORS.EQUAL)
+        
+        def __ne__(self, num) -> bool:
+            return self.__doComparisonOperation(num, Utils.OPERATORS.INEQUAL)
+        
+        def __lt__(self, num) -> bool:
+            return self.__doComparisonOperation(num, Utils.OPERATORS.LESS)
+        
+        def __le__(self, num) -> bool:
+            return self.__doComparisonOperation(num, Utils.OPERATORS.LESS_EQUAL)
+        
+        def __gt__(self, num) -> bool:
+            return self.__doComparisonOperation(num, Utils.OPERATORS.GREATER)
+        
+        def __ge__(self, num) -> bool:
+            return self.__doComparisonOperation(num, Utils.OPERATORS.GREATER_EQUAL)
+        
+        
         def __getRealMinSystem(self) -> int:
             return max(self.num)+1
         
@@ -148,6 +187,11 @@ class Utils:
             if self.currentSystem == 10 and self.__getRealMinSystem() <= 10:
                 return Utils.HardNum(ans)
             return Utils.tenToSystem(ans, self.currentSystem)
+
+        def __doComparisonOperation(self, num: Union[int, str, Utils.HardNum], operation: Utils.OPERATORS) -> bool:
+            ans: bool = eval(f"int(self) {operation.value} int(num)")
+            return ans
+
             
         def getCurrentSystem(self, *args, **kargs) -> int:
             """
