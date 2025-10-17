@@ -10,9 +10,9 @@ Example:
 F = ¬ (x → w) ∨ (y ≡ z) ∨ y
 "Truth table":
 var1 var2 var3 var4 F
- -    1    -    0   0
- -    0    1    -   0
- -    -    0    -   0
+ \-    1    \-    0   0
+ \-    0    1    \-   0
+ \-    \-    0    \-   0
 ```python
 Utils.LogicBinarMatrix(formula="not(not(x<=w) or (y==z) or y)", letters="xywz", mask=["...","10.",".10","0.."]).solve().print_result()
 # z x w y
