@@ -374,8 +374,3 @@ class Utils:
                     for key in keys:
                         print(self.ans[key][i], end = " ")
                     print()
-
-
-
-Utils.LogicBinarMatrix(formula="not((x and not(y)) or (y==z) or not(w))", letters="xywz", mask=["00.",".11",".00","01."]).solve().print_result()
-
