@@ -1,6 +1,7 @@
 from __future__ import annotations
 from typing import Union, Iterable
 from enum import Enum
+from itertools import permutations
 
 class Utils:
     nums: str = "0123456789"
@@ -291,3 +292,90 @@ class Utils:
         """
         num1, num2 = int(Utils.HardNum(num1)), int(Utils.HardNum(num2))
         return Utils.HardNum(num1 & num2)
+    
+    class LogicBinarMatrix:
+        def __init__(self, matrix: dict = {}, mask: list[str] = [], letters: str = "", formula: str = "") -> None:
+            self.matrix: dict = matrix
+            self.mask: list[str] = mask
+            self.ans: dict = {}
+            self.letters: str = letters
+            if not letters:
+                self.letters = "".join(matrix.keys())
+            self.formula = formula
+
+        # def __setattr__(self, name, value):
+        #     super().__setattr__(name, value)
+        #     if not self.ans:
+        #         self.ans = {}
+        
+        def solve(self) -> Utils.LogicBinarMatrix:
+            if not self.matrix and self.letters and self.formula:
+                self.create_matrix()
+            letter_perm = list(permutations(self.matrix.keys()))
+            matrix_perms = list(permutations(range(len(list(self.matrix.values())[0]))))
+            for i in letter_perm:
+                for j in matrix_perms:
+                    val = 0
+                    cor = 0
+                    for x in range(len(self.mask)):
+                        for y in range(len(self.mask[0])):
+                            if self.mask[x][y] in "01":
+                                val += 1
+                            if self.mask[x][y] == str(self.matrix[i[x]][j[y]]):
+                                cor += 1
+                    if cor == val:
+                        for x in i:
+                            self.ans[x] = [self.matrix[x][y] for y in j]
+            return self
+
+        def create_matrix(self, letters: str = "", formula: str = ""):
+            if letters:
+                self.letters = letters
+            if formula:
+                self.formula = formula
+
+            if not self.letters:
+                raise ValueError("Can`t create matrix: keys are missing")
+            if not self.formula:
+                raise ValueError("Can`t create matrix: formula is missing")
+        
+            
+            width = len(self.letters)
+            self.matrix = {}
+            for let in self.letters:
+                self.matrix[let] = []
+
+            for i in range(width**2):
+                binar = bin(i)[2:]
+                line = [int(_) for _ in ("0"*(width-len(binar))+binar)]
+                for j in range(width):
+                    exec(f"{self.letters[j]} = {line[j]}")
+
+                if eval(self.formula):
+                    self.add_line(*line)
+
+        def add_line(self, *args: int) -> None:
+            if len(args) != len(self.letters):
+                raise ValueError(f"Can`t add line: args amount({len(args)}) != keys amount({len(self.letters)})")
+            for i in range(len(args)):
+                if not isinstance(args[i], int):
+                    raise ValueError(f"Value must be int, not {type(args[i])}")
+                self.matrix[self.letters[i]].append(args[i])
+            
+
+        def print_result(self, printUnmasked: bool = True):
+            if not self.ans:
+                return
+            keys = list(self.ans.keys())
+            print(" ".join(keys))
+
+            if printUnmasked:
+                for i in range(len(next(iter(self.ans.values())))):
+                    for key in keys:
+                        print(self.ans[key][i], end = " ")
+                    print()
+
+
+
+Utils.LogicBinarMatrix(formula="not((x and not(y)) or (y==z) or not(w))", letters="xywz", mask=["00.",".11",".00","01."]).solve().print_result()
+
