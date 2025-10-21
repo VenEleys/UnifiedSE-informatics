@@ -2,8 +2,9 @@ from __future__ import annotations
 from typing import Union, Iterable
 from enum import Enum
 from itertools import permutations
-from shapely.geometry import Polygon, Point
+from shapely.geometry import Polygon, Point, LineString
 import numpy as np
+np.random.seed(5)
 
 class Utils:
     nums: str = "0123456789"
@@ -378,107 +379,162 @@ class Utils:
                     print()
     
     class Drawer:
-        def __init__(self, pos: Union[list[Union[int, float]], tuple[Union[int, float], Union[int, float]], np.ndarray, None] = None, angle: Union[int, None] = None, toDraw: Union[bool, None] = None, example: Union[Utils.Drawer, None] = None ):
-            if not example is None:
-                self.angle: int = example.angle
-                self.cords: np.ndarray = np.array((example.pos,(0,0)), dtype=np.float32)[:1]
-                self.pos: np.ndarray = example.pos
-                self.draw = example.draw
-            else:
-                self.angle = 0
-                self.cords = np.array(((0,0),(0,0)), dtype=np.float32)[:1]
-                self.pos = np.array((0,0), dtype=np.float32)
-                self.draw = True
+        class PlotType(Enum):
+            FILL = Polygon
+            NO_FILL = LineString
+        class Drawer:
+            def __init__(self, pos: Union[list[Union[int, float]], tuple[Union[int, float], Union[int, float]], np.ndarray, None] = None, angle: Union[int, None] = None, toDraw: Union[bool, None] = None, example: Union[Utils.Drawer.Drawer, None] = None ):
+                if not example is None:
+                    self.angle: int = example.angle
+                    self.cords: np.ndarray = np.array((example.pos,(0,0)), dtype=np.float32)[:1]
+                    self.pos: np.ndarray = example.pos
+                    self.draw = example.draw
+                else:
+                    self.angle = 0
+                    self.cords = np.array(((0,0),(0,0)), dtype=np.float32)[:1]
+                    self.pos = np.array((0,0), dtype=np.float32)
+                    self.draw = True
+                
+                if not angle is None:
+                    self.angle = angle
+                if not pos is None:
+                    self.pos = pos
+                if not toDraw is None:
+                    self.draw = toDraw
+
+            def setPos(self, pos: Union[list[Union[int, float]], tuple[Union[int, float], Union[int, float]]]):
+                if self.draw:
+                    self.cords = np.concatenate((self.cords, np.array((pos, (0,0)))[:1]))
+                self.pos = np.array(pos)
             
-            if not angle is None:
-                self.angle = angle
-            if not pos is None:
-                self.pos = pos
-            if not toDraw is None:
+            def vec(self, vec: Union[list[Union[int, float]], tuple[Union[int, float], Union[int, float]]]):
+                if self.draw:
+                    self.cords = np.concatenate((self.cords, np.array((self.cords[-1]+vec, (0,0)))[:1]))
+                self.pos += vec
+
+            def setDraw(self, toDraw: bool):
                 self.draw = toDraw
 
-        def setPos(self, pos: Union[list[Union[int, float]], tuple[Union[int, float], Union[int, float]]]):
-            if self.draw:
-                self.cords = np.concatenate((self.cords, np.array((pos, (0,0)))[:1]))
-            self.pos = np.array(pos)
-        
-        def vec(self, vec: Union[list[Union[int, float]], tuple[Union[int, float], Union[int, float]]]):
-            if self.draw:
-                self.cords = np.concatenate((self.cords, np.array((self.cords[-1]+vec, (0,0)))[:1]))
-            self.pos += vec
+            def createPolygon(self) -> Polygon:
+                poly = Polygon(self.cords)
+                return poly
 
-        def setDraw(self, toDraw: bool):
-            self.draw = toDraw
+            def getArea(self):
+                poly = self.createPolygon()
+                return poly.size
+            
+            def forward(self, length: int):
+                x = round(np.cos(np.deg2rad(self.angle)),2) * length
+                y = round(np.sin(np.deg2rad(self.angle)),2) * length
 
-        def __createPolygon(self) -> Polygon:
-            poly = Polygon(self.cords)
-            return poly
+                # x = np.cos(np.deg2rad(self.angle)) * length
+                # y = np.sin(np.deg2rad(self.angle)) * length
 
-        def getArea(self):
-            poly = self.__createPolygon()
-            return poly.size
-        
-        def forward(self, length: int):
-            x = round(np.cos(np.deg2rad(self.angle)),2) * length
-            y = round(np.sin(np.deg2rad(self.angle)),2) * length
+                self.vec((x,y))
 
-            # x = np.cos(np.deg2rad(self.angle)) * length
-            # y = np.sin(np.deg2rad(self.angle)) * length
+            def getIntersectionArea(self, drawer: Utils.Drawer.Drawer) -> float:
+                poly1 = self.createPolygon()
+                return poly1.intersection(Polygon(drawer.cords)).area
+            
+            def getIntersectionPoly(self, drawer: Utils.Drawer.Drawer) -> Polygon:
+                poly1 = self.createPolygon()
+                return poly1.intersection(drawer.createPolygon())
 
-            self.vec((x,y))
+            def right(self, angle: int):
+                self.angle -= angle
+                if self.angle < 0:
+                    self.angle = 360 - abs(self.angle)
+            
+            def left(self, angle: int):
+                self.angle += angle
+                if self.angle > 360:
+                    self.angle = self.angle - 360
 
-        def getIntersectionArea(self, drawer: Utils.Drawer) -> float:
-            poly1 = self.__createPolygon()
-            return poly1.intersection(Polygon(drawer.cords)).area
+            def countIntegersOnEdge(self) -> int:
+                return Utils.Drawer.countIntegersOnEdge(self)
+            def countIntegersWithin(self) -> int:
+                return Utils.Drawer.countIntegersWithin(self)
 
-        def right(self, angle: int):
-            self.angle -= angle
-            if self.angle < 0:
-                self.angle = 360 - abs(self.angle)
-        
-        def left(self, angle: int):
-            self.angle += angle
-            if self.angle > 360:
-                self.angle = self.angle - 360
-
-        def countIntegersOnEdge(self) -> int:
-            polygon = self.__createPolygon()
-            dots = set()
-            count = 0
-            boundary = polygon.boundary
-            if boundary.geom_type == 'LineString':
-                lines = [boundary]
-            else:
-                lines = list(boundary.geoms)
-            for line in lines:
-                coords = list(line.coords)
-                for i in range(len(coords) - 1):
-                    x1, y1 = coords[i]
-                    x2, y2 = coords[i + 1]
-                    dx, dy = x2 - x1, y2 - y1
-                    steps = max(abs(dx), abs(dy))
-                    if steps > 0:
-                        for t in range(int(steps) + 1):
-                            x = x1 + (dx * t) / steps
-                            y = y1 + (dy * t) / steps
-                            if abs(round(x) - x) < 1e-10 and abs(round(y) - y) < 1e-10:
-                                dots.add((x,y))
-            print(sorted(dots))
-            return len(dots)
-        
-        def countIntegerWithin(self) -> int:
-            polygon = self.__createPolygon()
-            minx, miny, maxx, maxy = polygon.bounds
-            count = 0
-            for x in range(np.ceil(minx), np.floor(maxx) + 1):
-                for y in range(np.ceil(miny), np.floor(maxy) + 1):
-                    point = Point(x, y)
-                    if polygon.contains(point):
-                        count += 1
-            return count
+            def countAllIntegers(self) -> int:
+                return Utils.Drawer.countAllIntegers(self)
+            
+            def showPlot(self, plot_type: Union[Utils.Drawer.PlotType, None] = None):
+                if isinstance(plot_type, Utils.Drawer.PlotType):
+                    Utils.Drawer.showPlot(self, plot_type=plot_type)
+                    return
+                Utils.Drawer.showPlot(self)
+            
+            def showTurtle(self):
+                Utils.Drawer.showTurtles(self)
 
         @staticmethod
-        def show(*drawers: Utils.Drawer, pensize: Union[int, None] =  None, scale: int = 15):
+        def countIntegersOnEdge(poly: Union[Utils.Drawer.Drawer, Polygon, LineString]) -> int:
+            if isinstance(poly, Utils.Drawer.Drawer):
+                cords = poly.cords
+            elif isinstance(poly, LineString):
+                cords = poly.coords
+            elif isinstance(poly, Polygon):
+                cords = poly.exterior.coords
+            dots: set[tuple[int, int]] = set()
+            for i in range(len(cords) -1):
+                x1, y1 = cords[i]
+                x2, y2 = cords[i+1]
+
+                dx = x2-x1
+                dy = y2-y1
+                _x = np.sign(dx).astype(int)
+                _y = np.sign(dy).astype(int)
+
+                line = LineString((cords[i], cords[i+1]))
+                if _x == 0 and _y == 0:
+                    point = Point(x1,y1)
+                    if point.distance(line) <= 1e-5:
+                        dots.add((x,y))
+                    continue
+                if _x == 0:
+                    x = np.round(x1).astype(int)
+                    for y in range(np.round(y1).astype(int)-_y, np.round(y2).astype(int)+_y, _y):
+                        point = Point(x, y)
+                        if point.distance(line) <= 1e-5:
+                            dots.add((x, y))
+                    continue
+                
+                if _y == 0:
+                    y = np.round(y1).astype(int)
+                    for x in range(np.round(x1).astype(int)-_x, np.round(x2).astype(int)+_x, _x):
+                        point = Point(x, y)
+                        if point.distance(line) <= 1e-5:
+                            dots.add((x,y))
+
+                    continue
+
+                for x in range(np.round(x1).astype(int)-_x, np.round(x2).astype(int)+_x, _x):
+                    for y in range(np.round(y1).astype(int)-_y, np.round(y2).astype(int)+_y, _y):
+                        point = Point(x,y)
+                        if point.distance(line) <= 1e-5:
+                            dots.add((x,y))
+                    continue
+            return len(dots)
+        @staticmethod
+        def countIntegersWithin(poly: Union[Utils.Drawer.Drawer, Polygon]) -> int:
+                if isinstance(poly, Utils.Drawer.Drawer):
+                    polygon = poly.createPolygon()
+                else:
+                    polygon = poly
+                minx, miny, maxx, maxy = polygon.bounds
+                count = 0
+                for x in range(np.floor(minx).astype(int), np.ceil(maxx).astype(int) + 1):
+                    for y in range(np.floor(miny).astype(int), np.ceil(maxy).astype(int) + 1):
+                        point = Point(x, y)
+                        if polygon.contains(point):
+                            count += 1
+                return count
+        @staticmethod
+        def countAllIntegers(poly: Union[Utils.Drawer.Drawer, Polygon]) -> int:
+                return Utils.Drawer.countIntegersOnEdge(poly) + Utils.Drawer.countIntegersWithin(poly)
+        
+        @staticmethod
+        def showTurtles(*drawers: Utils.Drawer.Drawer, pensize: Union[int, None] =  None, scale: int = 1):
             import turtle
             if not pensize is None:
                 turtle.pensize(abs(pensize))
@@ -492,12 +548,16 @@ class Utils:
                 for cord in drawer.cords[1:]:
                     turtle.goto(cord*scale)
             turtle.done()
+        
+        @staticmethod
+        def showPlot(drawer: Utils.Drawer.Drawer, plot_type: Utils.Drawer.PlotType = PlotType.NO_FILL):
+            import geopandas as gpd
+            import matplotlib.pyplot as plt
 
-# dr1 = Utils.Drawer(angle = 90)
-# for i in range(8):
-#     #print(dr1.pos, dr1.angle)
-#     dr1.right(45)
-#     dr1.forward(6)
-# print(dr1.countIntegersOnEdge())
-# #Utils.Drawer.show(dr1)
-# print(dr1.cords)
+            poly = plot_type.value(drawer.cords)
+            gdf = gpd.GeoSeries([poly])
+            gdf.plot(color=np.array([np.random.random(),np.random.random(),np.random.random(),1]), edgecolor="red", linewidth=3)
+            plt.grid(color="black")
+            plt.xticks(range(int(poly.bounds[0])-3, int(poly.bounds[2])+3, 1))
+            plt.yticks(range(int(poly.bounds[1])-3, int(poly.bounds[3])+3, 1))
+            plt.show()
